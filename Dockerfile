@@ -12,8 +12,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Allow Prisma to download engine binaries behind corporate SSL inspection
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 RUN npx prisma generate
 RUN npm run build
+# Ensure public dir exists (Next.js doesn't require it)
+RUN mkdir -p /app/public
 # Collect pg runtime deps into a clean directory
 RUN mkdir -p /runtime-deps && \
     cd node_modules && \
@@ -55,4 +59,6 @@ FROM base AS migrator
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Allow Prisma to download engine binaries behind corporate SSL inspection
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 RUN npx prisma generate
